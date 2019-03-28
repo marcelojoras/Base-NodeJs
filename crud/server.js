@@ -1,13 +1,15 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const MongoClient = require('mongodb').MongoClient; 
 const app = express();
 
-const uri = "mongodb+srv://marcelojoras:16202327@crud-node-802lf.mongodb.net/test?retryWrites=true";
+const MongoClient = require('mongodb').MongoClient; 
 
-MongoClient.connect(uri, (err, client) => {
+const uri = "mongodb://localhost/crud-node";
+
+MongoClient.connect(uri, { useNewUrlParser: true }, function(err, mongo){
 	if(err) return console.log(err);
-	db = client.db('crud-node');
+	db = mongo.db('crud-node');
+	console.log('connection successfull');
 });
 
 app.listen(3000, () => {
@@ -19,14 +21,25 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.set('view engine', 'ejs');
 
 app.get('/', (req, res) => {
-	res.render('index.ejs')
+    res.render('index.ejs');
+});
+
+app.get('/', (req, res) => {
+	var cursor = db.collection('data').find();
+});
+
+app.get('/show', (req, res) => {
+    db.collection('data').find().toArray((err, results) => {
+        if (err) return console.log(err);
+        res.render('show.ejs', { data: results });
+    });
 });
 
 app.post('/show', (req, res) => {
-	db.collection('data').save(req.body, (err, result) => {
+	db.collection('data').insertOne(req.body, (err, result) => {
 		if(err) return console.log(err);
 
 		console.log('salvo no banco');
-		res.redirect('/'); 
+		res.redirect('/show'); 
 	})
 });
